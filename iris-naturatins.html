@@ -4,9 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Íris · Naturatins</title>
- <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
- <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
@@ -19,587 +18,482 @@
 <body>
   <div id="root" style="height:100%;"></div>
 
-  <!--
-  ╔══════════════════════════════════════════╗
-  ║   ÍRIS · FILA DE DEMANDAS · NATURATINS  ║
-  ║                                          ║
-  ║   CONFIGURAÇÃO — edite as duas linhas    ║
-  ║   abaixo com suas chaves do JSONBin.     ║
-  ║   Siga o guia de instalação.             ║
-  ╚══════════════════════════════════════════╝
-  -->
   <script>
+    // Configuração da gaveta JSONBin desta Íris (já preenchida)
     window.IRIS = {
-      KEY: "$2a$10$MWS5r7XaW0X0fbFHjMn5Pup1dB.pm6pNQMtO4PyNHRPZKHlGXlbNW",
+      KEY: "$2a$10$MwiS5r7XaW0X0fbFHjMn5Pup1dB.pm6pNQMtO4PyNHRPZKH1GX1bNw",
       BIN: "6a301d16f5f4af5e29f5f64b"
     };
   </script>
 
-  <script type="text/babel">
-    const { useState, useEffect, useCallback } = React;
-    const C = window.IRIS;
-    const ready = () => C.KEY !== "SEU_MASTER_KEY_AQUI" && C.BIN !== "SEU_BIN_ID_AQUI";
+  <script>
+    var e = React.createElement;
+    var useState = React.useState, useEffect = React.useEffect, useCallback = React.useCallback;
+    var C = window.IRIS;
+    function ready() { return C.KEY !== "SEU_MASTER_KEY_AQUI" && C.BIN !== "SEU_BIN_ID_AQUI"; }
 
-    const API = {
-      load: async () => {
-        const r = await fetch(`https://api.jsonbin.io/v3/b/${C.BIN}/latest`, {
+    var API = {
+      load: function() {
+        return fetch("https://api.jsonbin.io/v3/b/" + C.BIN + "/latest", {
           headers: { "X-Master-Key": C.KEY, "X-Bin-Meta": "false" }
+        }).then(function(r) {
+          if (!r.ok) throw new Error("Erro ao carregar");
+          return r.json();
+        }).then(function(d) {
+          return Array.isArray(d.record && d.record.tasks) ? d.record.tasks : [];
         });
-        if (!r.ok) throw new Error("Erro ao carregar");
-        const d = await r.json();
-        return Array.isArray(d.record?.tasks) ? d.record.tasks : [];
       },
-      save: async (tasks) => {
-        await fetch(`https://api.jsonbin.io/v3/b/${C.BIN}`, {
+      save: function(tasks) {
+        return fetch("https://api.jsonbin.io/v3/b/" + C.BIN, {
           method: "PUT",
           headers: { "Content-Type": "application/json", "X-Master-Key": C.KEY },
-          body: JSON.stringify({ tasks })
+          body: JSON.stringify({ tasks: tasks })
         });
       }
     };
 
-    const COMPLEXITY = [
+    var COMPLEXITY = [
       { label: "Card/Banner (layout pronto)",        hours: 1, emoji: "⚡" },
       { label: "Criação com referência",             hours: 2, emoji: "🎨" },
       { label: "Do zero (sem referência)",           hours: 3, emoji: "✏️" },
       { label: "Campanha completa",                  hours: 5, emoji: "📢" },
-      { label: "Projeto complexo (vídeo / peça grande)", hours: 8, emoji: "🎬" },
+      { label: "Projeto complexo (vídeo / peça grande)", hours: 8, emoji: "🎬" }
     ];
-    const CATS = ["Card/Post","Banner","Impresso","Relatório","Apresentação","Campanha Ambiental","Outro"];
-    const W0 = 8, WH = 6;
-    const G = "#1C5C3C", SAGE = "#EAF3EC", AMB = "#C88A1A",
-          BG = "#F6F9F6", W = "#FFFFFF", RED = "#C94B4B", GRN = "#3A8A58";
+    var CATS = ["Card/Post","Banner","Impresso","Relatório","Apresentação","Campanha Ambiental","Outro"];
+    var W0 = 8, WH = 6;
+    var G = "#1C5C3C", SAGE = "#EAF3EC", AMB = "#C88A1A",
+        BG = "#F6F9F6", W = "#FFFFFF", RED = "#C94B4B", GRN = "#3A8A58";
 
     function addH(from, h) {
-      let t = new Date(from), r = h;
+      var t = new Date(from), r = h;
       while (r > 0) {
-        while ([0,6].includes(t.getDay())) { t.setDate(t.getDate()+1); t.setHours(W0,0,0,0); }
+        while (t.getDay() === 0 || t.getDay() === 6) { t.setDate(t.getDate()+1); t.setHours(W0,0,0,0); }
         if (t.getHours() < W0) t.setHours(W0,0,0,0);
-        const e = W0+WH;
-        if (t.getHours() >= e) { t.setDate(t.getDate()+1); t.setHours(W0,0,0,0); continue; }
-        const l = e - t.getHours() - t.getMinutes()/60;
-        if (r <= l) { t.setTime(t.getTime()+r*3600000); r=0; }
-        else { r-=l; t.setDate(t.getDate()+1); t.setHours(W0,0,0,0); }
+        var end = W0 + WH;
+        if (t.getHours() >= end) { t.setDate(t.getDate()+1); t.setHours(W0,0,0,0); continue; }
+        var left = end - t.getHours() - t.getMinutes()/60;
+        if (r <= left) { t.setTime(t.getTime() + r*3600000); r = 0; }
+        else { r -= left; t.setDate(t.getDate()+1); t.setHours(W0,0,0,0); }
       }
       return t;
     }
 
     function fmt(d) {
-      const now=new Date(), tod=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-      const tmr=new Date(tod); tmr.setDate(tmr.getDate()+1);
-      const day=new Date(d.getFullYear(),d.getMonth(),d.getDate());
-      const hm=d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
-      if (day.getTime()===tod.getTime()) return `Hoje ${hm}`;
-      if (day.getTime()===tmr.getTime()) return `Amanhã ${hm}`;
-      return `${["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][d.getDay()]} ${d.getDate()}/${d.getMonth()+1} ${hm}`;
+      var now = new Date(), tod = new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      var tmr = new Date(tod); tmr.setDate(tmr.getDate()+1);
+      var day = new Date(d.getFullYear(),d.getMonth(),d.getDate());
+      var hm = d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+      if (day.getTime()===tod.getTime()) return "Hoje " + hm;
+      if (day.getTime()===tmr.getTime()) return "Amanhã " + hm;
+      var dias = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+      return dias[d.getDay()] + " " + d.getDate() + "/" + (d.getMonth()+1) + " " + hm;
     }
 
     function calcETA(tasks) {
-      let p=new Date();
-      if (p.getHours()<W0) p.setHours(W0,0,0,0);
-      else if (p.getHours()>=W0+WH){p.setDate(p.getDate()+1);p.setHours(W0,0,0,0);}
-      while([0,6].includes(p.getDay())){p.setDate(p.getDate()+1);p.setHours(W0,0,0,0);}
-      const s=[...tasks.filter(t=>t.status!=="concluído")].sort((a,b)=>a.order-b.order);
-      const r={};
-      s.forEach(t=>{const st=new Date(p);const en=addH(new Date(p),t.estimatedHours);r[t.id]={s:st,e:en};p=new Date(en);});
+      var p = new Date();
+      if (p.getHours() < W0) p.setHours(W0,0,0,0);
+      else if (p.getHours() >= W0+WH) { p.setDate(p.getDate()+1); p.setHours(W0,0,0,0); }
+      while (p.getDay()===0 || p.getDay()===6) { p.setDate(p.getDate()+1); p.setHours(W0,0,0,0); }
+      var s = tasks.filter(function(t){ return t.status!=="concluído"; }).sort(function(a,b){ return a.order-b.order; });
+      var r = {};
+      s.forEach(function(t) {
+        var st = new Date(p), en = addH(new Date(p), t.estimatedHours);
+        r[t.id] = { s: st, e: en };
+        p = new Date(en);
+      });
       return r;
     }
 
-    const I = (x={}) => ({width:"100%",padding:"11px 12px",border:"1.5px solid #C0D8C8",borderRadius:8,
-      fontSize:14,outline:"none",background:W,boxSizing:"border-box",fontFamily:"inherit",color:"#1A2E22",...x});
-    const B = (c,x={}) => ({border:"none",borderRadius:8,cursor:"pointer",fontFamily:"inherit",
-      fontWeight:600,color:W,background:c,...x});
+    function I(x) {
+      x = x || {};
+      var base = { width:"100%", padding:"11px 12px", border:"1.5px solid #C0D8C8",
+        borderRadius:8, fontSize:14, outline:"none", background:W, boxSizing:"border-box",
+        fontFamily:"inherit", color:"#1A2E22" };
+      for (var k in x) base[k] = x[k];
+      return base;
+    }
+    function B(c, x) {
+      x = x || {};
+      var base = { border:"none", borderRadius:8, cursor:"pointer", fontFamily:"inherit",
+        fontWeight:600, color:W, background:c };
+      for (var k in x) base[k] = x[k];
+      return base;
+    }
 
-    // ─── NOT CONFIGURED ───
     function NotConfigured() {
-      return (
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-          minHeight:"100vh",padding:32,textAlign:"center",background:BG}}>
-          <div style={{fontSize:48,marginBottom:16}}>⚙️</div>
-          <div style={{fontSize:18,fontWeight:700,color:G,marginBottom:10}}>Configuração pendente</div>
-          <div style={{fontSize:13,color:"#6A8A75",lineHeight:1.7,maxWidth:320}}>
-            Abra o arquivo <code style={{background:SAGE,padding:"2px 6px",borderRadius:4,fontSize:12}}>iris-naturatins.html</code> no editor e substitua{" "}
-            <code style={{background:SAGE,padding:"2px 6px",borderRadius:4,fontSize:12}}>SEU_MASTER_KEY_AQUI</code> e{" "}
-            <code style={{background:SAGE,padding:"2px 6px",borderRadius:4,fontSize:12}}>SEU_BIN_ID_AQUI</code>{" "}
-            com suas chaves do JSONBin. Siga o guia de instalação.
-          </div>
-        </div>
+      return e("div", {style:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:32,textAlign:"center",background:BG}},
+        e("div",{style:{fontSize:48,marginBottom:16}}, "⚙️"),
+        e("div",{style:{fontSize:18,fontWeight:700,color:G,marginBottom:10}}, "Configuração pendente"),
+        e("div",{style:{fontSize:13,color:"#6A8A75",lineHeight:1.7,maxWidth:320}}, "Verifique as chaves do JSONBin no arquivo.")
       );
     }
 
-    // ─── LOGIN ───
-    function Login({ onLogin, onBack }) {
-      const [pin, setPin] = useState("");
-      const [err, setErr] = useState(false);
-      const stored = localStorage.getItem("iris-pin") || "1234";
-      const attempt = () => {
-        if (pin===stored) onLogin();
-        else { setErr(true); setPin(""); setTimeout(()=>setErr(false),2000); }
-      };
-      return (
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-          minHeight:"100vh",padding:32,background:BG}}>
-          <div style={{width:58,height:58,background:G,borderRadius:"50%",display:"flex",alignItems:"center",
-            justifyContent:"center",fontSize:26,marginBottom:18}}>🔑</div>
-          <div style={{fontSize:18,fontWeight:700,color:G,marginBottom:5}}>Acesso Admin · Íris</div>
-          <div style={{fontSize:13,color:"#8AAA95",marginBottom:26,textAlign:"center"}}>
-            Digite o PIN para gerenciar a fila
-          </div>
-          <input type="password" value={pin} onChange={e=>setPin(e.target.value)}
-            onKeyDown={e=>e.key==="Enter"&&attempt()} placeholder="PIN" maxLength={8} autoFocus
-            style={{...I({textAlign:"center",fontSize:22,letterSpacing:8,marginBottom:10,
-              borderColor:err?RED:"#C0D8C8",maxWidth:200,display:"block"}),maxWidth:200}}
-          />
-          {err && <div style={{color:RED,fontSize:12,marginBottom:10}}>PIN incorreto</div>}
-          <button onClick={attempt} style={{...B(G,{padding:"11px 32px",fontSize:14,marginBottom:12,borderRadius:9})}}>
-            Entrar
-          </button>
-          <button onClick={onBack} style={{background:"none",border:"none",color:"#8AAA95",fontSize:13,cursor:"pointer"}}>
-            ← Voltar
-          </button>
-        </div>
+    function Login(props) {
+      var pinState = useState(""); var pin = pinState[0], setPin = pinState[1];
+      var errState = useState(false); var err = errState[0], setErr = errState[1];
+      var stored = localStorage.getItem("iris-pin") || "1234";
+      function attempt() {
+        if (pin === stored) { props.onLogin(); }
+        else { setErr(true); setPin(""); setTimeout(function(){ setErr(false); }, 2000); }
+      }
+      return e("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:32,background:BG}},
+        e("div",{style:{width:58,height:58,background:G,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,marginBottom:18}}, "🔑"),
+        e("div",{style:{fontSize:18,fontWeight:700,color:G,marginBottom:5}}, "Acesso Admin · Íris"),
+        e("div",{style:{fontSize:13,color:"#8AAA95",marginBottom:26,textAlign:"center"}}, "Digite o PIN para gerenciar a fila"),
+        e("input",{type:"password", value:pin, onChange:function(ev){setPin(ev.target.value);},
+          onKeyDown:function(ev){ if(ev.key==="Enter") attempt(); }, placeholder:"PIN", maxLength:8, autoFocus:true,
+          style:I({textAlign:"center",fontSize:22,letterSpacing:8,marginBottom:10,borderColor:err?RED:"#C0D8C8",maxWidth:200,display:"block"})}),
+        err ? e("div",{style:{color:RED,fontSize:12,marginBottom:10}}, "PIN incorreto") : null,
+        e("button",{onClick:attempt, style:B(G,{padding:"11px 32px",fontSize:14,marginBottom:12,borderRadius:9})}, "Entrar"),
+        e("button",{onClick:props.onBack, style:{background:"none",border:"none",color:"#8AAA95",fontSize:13,cursor:"pointer"}}, "← Voltar")
       );
     }
 
-    // ─── HEADER ───
-    function Header({ isAdmin, saving, onLogout, onLogin, tabs, activeTab, setActiveTab }) {
-      return (
-        <div style={{background:G,padding:"14px 18px 0"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <div style={{width:40,height:40,background:"rgba(255,255,255,0.14)",borderRadius:"50%",
-                display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>🌿</div>
-              <div>
-                <div style={{color:W,fontWeight:700,fontSize:17,letterSpacing:"-0.3px",display:"flex",alignItems:"center",gap:7}}>
-                  Íris
-                  {isAdmin && <span style={{fontSize:11,fontWeight:500,background:"rgba(255,255,255,0.18)",
-                    borderRadius:20,padding:"2px 9px"}}>Admin</span>}
-                </div>
-                <div style={{color:"rgba(255,255,255,0.5)",fontSize:10}}>
-                  {isAdmin ? "Naturatins · gerenciamento" : "Demandas de comunicação · Naturatins"}
-                </div>
-              </div>
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              {saving && <div style={{color:"rgba(255,255,255,0.5)",fontSize:11,animation:"pulse 1.5s infinite"}}>salvando...</div>}
-              {isAdmin
-                ? <button onClick={onLogout} style={{...B("rgba(255,255,255,0.12)",{fontSize:11,padding:"6px 12px",color:"rgba(255,255,255,0.7)"})}}>Sair</button>
-                : <button onClick={onLogin} style={{...B("rgba(255,255,255,0.1)",{fontSize:11,padding:"6px 12px",color:"rgba(255,255,255,0.55)"})}}>🔑 Admin</button>
-              }
-            </div>
-          </div>
-          <div style={{display:"flex",gap:3}}>
-            {tabs.map(([id,ic,lb]) => (
-              <button key={id} onClick={()=>setActiveTab(id)} style={{flex:1,padding:"9px 0",
-                background:activeTab===id?BG:"transparent",border:"none",borderRadius:"8px 8px 0 0",
-                cursor:"pointer",color:activeTab===id?G:"rgba(255,255,255,0.5)",
-                fontWeight:activeTab===id?700:400,fontSize:12,display:"flex",alignItems:"center",
-                justifyContent:"center",gap:5}}>{ic} {lb}</button>
-            ))}
-          </div>
-        </div>
+    function Header(props) {
+      var isAdmin = props.isAdmin, saving = props.saving, tabs = props.tabs, activeTab = props.activeTab, setActiveTab = props.setActiveTab;
+      return e("div",{style:{background:G,padding:"14px 18px 0"}},
+        e("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}},
+          e("div",{style:{display:"flex",alignItems:"center",gap:10}},
+            e("div",{style:{width:40,height:40,background:"rgba(255,255,255,0.14)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}, "🌿"),
+            e("div",null,
+              e("div",{style:{color:W,fontWeight:700,fontSize:17,letterSpacing:"-0.3px",display:"flex",alignItems:"center",gap:7}},
+                "Íris",
+                isAdmin ? e("span",{style:{fontSize:11,fontWeight:500,background:"rgba(255,255,255,0.18)",borderRadius:20,padding:"2px 9px"}}, "Admin") : null
+              ),
+              e("div",{style:{color:"rgba(255,255,255,0.5)",fontSize:10}}, isAdmin ? "Naturatins · gerenciamento" : "Demandas de comunicação · Naturatins")
+            )
+          ),
+          e("div",{style:{display:"flex",alignItems:"center",gap:8}},
+            saving ? e("div",{style:{color:"rgba(255,255,255,0.5)",fontSize:11,animation:"pulse 1.5s infinite"}}, "salvando...") : null,
+            isAdmin
+              ? e("button",{onClick:props.onLogout, style:B("rgba(255,255,255,0.12)",{fontSize:11,padding:"6px 12px",color:"rgba(255,255,255,0.7)"})}, "Sair")
+              : e("button",{onClick:props.onLogin, style:B("rgba(255,255,255,0.1)",{fontSize:11,padding:"6px 12px",color:"rgba(255,255,255,0.55)"})}, "🔑 Admin")
+          )
+        ),
+        e("div",{style:{display:"flex",gap:3}},
+          tabs.map(function(tabDef) {
+            var id = tabDef[0], ic = tabDef[1], lb = tabDef[2];
+            return e("button",{key:id, onClick:function(){setActiveTab(id);}, style:{flex:1,padding:"9px 0",
+              background:activeTab===id?BG:"transparent",border:"none",borderRadius:"8px 8px 0 0",cursor:"pointer",
+              color:activeTab===id?G:"rgba(255,255,255,0.5)",fontWeight:activeTab===id?700:400,fontSize:12,
+              display:"flex",alignItems:"center",justifyContent:"center",gap:5}}, ic + " " + lb);
+          })
+        )
       );
     }
 
-    // ─── TASK CARD (admin) ───
-    function TaskCard({ task, idx, total, eta, onStatus, onMove, onDel }) {
-      const e = eta[task.id];
-      return (
-        <div style={{background:W,borderRadius:12,padding:14,marginBottom:10,
-          borderLeft:`4px solid ${task.status==="em andamento"?AMB:task.urgente?RED:"#C0D8C8"}`,
-          boxShadow:task.status==="em andamento"?"0 2px 14px rgba(200,138,26,0.15)":"0 1px 5px rgba(0,0,0,0.05)"}}>
-          <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:8}}>
-            <div style={{width:26,height:26,borderRadius:"50%",
-              background:task.status==="em andamento"?AMB:SAGE,
-              color:task.status==="em andamento"?W:G,
-              display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,flexShrink:0}}>
-              {task.status==="em andamento"?"▶":idx+1}
-            </div>
-            <div style={{flex:1}}>
-              <div style={{fontSize:14,fontWeight:600,color:"#1A2E22",lineHeight:1.3}}>
-                {task.urgente&&<span style={{color:RED,fontSize:11}}>⚡ </span>}{task.title}
-              </div>
-              <div style={{fontSize:11,color:"#8AAA95",marginTop:2}}>
-                por {task.requester} · {task.category}
-              </div>
-            </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              <div style={{fontSize:14,fontWeight:700,color:G}}>~{task.estimatedHours}h</div>
-              <div style={{fontSize:9,color:"#BBB"}}>estimado</div>
-            </div>
-          </div>
-          {e && (
-            <div style={{background:"#F3F9F4",borderRadius:8,padding:"8px 12px",marginBottom:8,
-              display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div><div style={{fontSize:10,color:"#8AAA95"}}>Início</div>
-                <div style={{fontSize:12,fontWeight:600,color:"#3A6A4A"}}>{fmt(e.s)}</div></div>
-              <div style={{color:"#C0D8C8",fontSize:18}}>→</div>
-              <div style={{textAlign:"right"}}><div style={{fontSize:10,color:"#8AAA95"}}>Conclusão</div>
-                <div style={{fontSize:12,fontWeight:600,color:G}}>{fmt(e.e)}</div></div>
-            </div>
-          )}
-          {task.notes && (
-            <div style={{fontSize:12,color:"#4A6A55",background:"#F3F9F4",borderRadius:6,
-              padding:"7px 10px",marginBottom:8}}>📝 {task.notes}</div>
-          )}
-          <div style={{fontSize:11,color:"#8AAA95",marginBottom:10}}>
-            {COMPLEXITY.find(c=>c.label===task.complexity)?.emoji} {task.complexity}
-          </div>
-          <div style={{display:"flex",gap:6}}>
-            {task.status==="pendente" &&
-              <button onClick={()=>onStatus(task.id,"em andamento")}
-                style={{...B(AMB,{flex:1,padding:"9px 0",fontSize:12})}}>▶ Iniciar</button>}
-            {task.status==="em andamento" &&
-              <button onClick={()=>onStatus(task.id,"concluído")}
-                style={{...B(GRN,{flex:1,padding:"9px 0",fontSize:12})}}>✓ Concluir</button>}
-            <button onClick={()=>onMove(task.id,"up")} disabled={idx===0}
-              style={{width:36,padding:"9px 0",background:idx===0?"#EFF5F1":SAGE,
-                color:idx===0?"#C0D8C8":G,border:"none",borderRadius:7,fontSize:14,
-                cursor:idx===0?"default":"pointer"}}>↑</button>
-            <button onClick={()=>onMove(task.id,"down")} disabled={idx===total-1}
-              style={{width:36,padding:"9px 0",background:idx===total-1?"#EFF5F1":SAGE,
-                color:idx===total-1?"#C0D8C8":G,border:"none",borderRadius:7,fontSize:14,
-                cursor:idx===total-1?"default":"pointer"}}>↓</button>
-            <button onClick={()=>onDel(task.id)}
-              style={{width:36,padding:"9px 0",background:"#FEF0EF",color:RED,
-                border:"none",borderRadius:7,fontSize:16,cursor:"pointer"}}>×</button>
-          </div>
-        </div>
+    function TaskCard(props) {
+      var task = props.task, idx = props.idx, total = props.total, eta = props.eta;
+      var ev = eta[task.id];
+      var compMeta = COMPLEXITY.filter(function(c){return c.label===task.complexity;})[0] || {};
+      return e("div",{style:{background:W,borderRadius:12,padding:14,marginBottom:10,
+          borderLeft:"4px solid " + (task.status==="em andamento"?AMB:(task.urgente?RED:"#C0D8C8")),
+          boxShadow:task.status==="em andamento"?"0 2px 14px rgba(200,138,26,0.15)":"0 1px 5px rgba(0,0,0,0.05)"}},
+        e("div",{style:{display:"flex",alignItems:"flex-start",gap:10,marginBottom:8}},
+          e("div",{style:{width:26,height:26,borderRadius:"50%",background:task.status==="em andamento"?AMB:SAGE,
+            color:task.status==="em andamento"?W:G,display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:11,fontWeight:700,flexShrink:0}}, task.status==="em andamento"?"▶":String(idx+1)),
+          e("div",{style:{flex:1}},
+            e("div",{style:{fontSize:14,fontWeight:600,color:"#1A2E22",lineHeight:1.3}},
+              task.urgente ? e("span",{style:{color:RED,fontSize:11}}, "⚡ ") : null, task.title
+            ),
+            e("div",{style:{fontSize:11,color:"#8AAA95",marginTop:2}}, "por " + task.requester + " · " + task.category)
+          ),
+          e("div",{style:{textAlign:"right",flexShrink:0}},
+            e("div",{style:{fontSize:14,fontWeight:700,color:G}}, "~" + task.estimatedHours + "h"),
+            e("div",{style:{fontSize:9,color:"#BBB"}}, "estimado")
+          )
+        ),
+        ev ? e("div",{style:{background:"#F3F9F4",borderRadius:8,padding:"8px 12px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center"}},
+          e("div",null, e("div",{style:{fontSize:10,color:"#8AAA95"}}, "Início"), e("div",{style:{fontSize:12,fontWeight:600,color:"#3A6A4A"}}, fmt(ev.s))),
+          e("div",{style:{color:"#C0D8C8",fontSize:18}}, "→"),
+          e("div",{style:{textAlign:"right"}}, e("div",{style:{fontSize:10,color:"#8AAA95"}}, "Conclusão"), e("div",{style:{fontSize:12,fontWeight:600,color:G}}, fmt(ev.e)))
+        ) : null,
+        task.notes ? e("div",{style:{fontSize:12,color:"#4A6A55",background:"#F3F9F4",borderRadius:6,padding:"7px 10px",marginBottom:8}}, "📝 " + task.notes) : null,
+        e("div",{style:{fontSize:11,color:"#8AAA95",marginBottom:10}}, (compMeta.emoji||"") + " " + task.complexity),
+        e("div",{style:{display:"flex",gap:6}},
+          task.status==="pendente" ? e("button",{onClick:function(){props.onStatus(task.id,"em andamento");}, style:B(AMB,{flex:1,padding:"9px 0",fontSize:12})}, "▶ Iniciar") : null,
+          task.status==="em andamento" ? e("button",{onClick:function(){props.onStatus(task.id,"concluído");}, style:B(GRN,{flex:1,padding:"9px 0",fontSize:12})}, "✓ Concluir") : null,
+          e("button",{onClick:function(){props.onMove(task.id,"up");}, disabled:idx===0,
+            style:{width:36,padding:"9px 0",background:idx===0?"#EFF5F1":SAGE,color:idx===0?"#C0D8C8":G,border:"none",borderRadius:7,fontSize:14,cursor:idx===0?"default":"pointer"}}, "↑"),
+          e("button",{onClick:function(){props.onMove(task.id,"down");}, disabled:idx===total-1,
+            style:{width:36,padding:"9px 0",background:idx===total-1?"#EFF5F1":SAGE,color:idx===total-1?"#C0D8C8":G,border:"none",borderRadius:7,fontSize:14,cursor:idx===total-1?"default":"pointer"}}, "↓"),
+          e("button",{onClick:function(){props.onDel(task.id);}, style:{width:36,padding:"9px 0",background:"#FEF0EF",color:RED,border:"none",borderRadius:7,fontSize:16,cursor:"pointer"}}, "×")
+        )
       );
     }
 
-    // ─── MAIN APP ───
     function Iris() {
-      const [mode, setMode] = useState("public");
-      const [tasks, setTasks] = useState([]);
-      const [loading, setLoading] = useState(true);
-      const [saving, setSaving] = useState(false);
-      const [loadErr, setLoadErr] = useState(false);
-      const [tab, setTab] = useState("request");
-      const [atab, setAtab] = useState("queue");
-      const [form, setForm] = useState({requester:"",title:"",category:"Card/Post",complexity:0,notes:"",urgente:false});
-      const [sent, setSent] = useState(false);
-      const [myId, setMyId] = useState(null);
-      const [newPin, setNewPin] = useState("");
-      const [pinSaved, setPinSaved] = useState(false);
+      var modeState = useState("public"); var mode = modeState[0], setMode = modeState[1];
+      var tasksState = useState([]); var tasks = tasksState[0], setTasks = tasksState[1];
+      var loadingState = useState(true); var loading = loadingState[0], setLoading = loadingState[1];
+      var savingState = useState(false); var saving = savingState[0], setSaving = savingState[1];
+      var loadErrState = useState(false); var loadErr = loadErrState[0], setLoadErr = loadErrState[1];
+      var tabState = useState("request"); var tab = tabState[0], setTab = tabState[1];
+      var atabState = useState("queue"); var atab = atabState[0], setAtab = atabState[1];
+      var formState = useState({requester:"",title:"",category:"Card/Post",complexity:0,notes:"",urgente:false});
+      var form = formState[0], setForm = formState[1];
+      var sentState = useState(false); var sent = sentState[0], setSent = sentState[1];
+      var myIdState = useState(null); var myId = myIdState[0], setMyId = myIdState[1];
+      var newPinState = useState(""); var newPin = newPinState[0], setNewPin = newPinState[1];
+      var pinSavedState = useState(false); var pinSaved = pinSavedState[0], setPinSaved = pinSavedState[1];
 
-      const refresh = useCallback(async (silent=false) => {
+      var refresh = useCallback(function(silent) {
         if (!silent) setLoadErr(false);
-        try { const t=await API.load(); setTasks(t); }
-        catch { if(!silent) setLoadErr(true); }
-        setLoading(false);
+        API.load().then(function(t){ setTasks(t); setLoading(false); })
+          .catch(function(){ if(!silent) setLoadErr(true); setLoading(false); });
       }, []);
 
-      useEffect(() => { refresh(); const id=setInterval(()=>refresh(true),120000); return ()=>clearInterval(id); }, [refresh]);
+      useEffect(function() {
+        refresh(false);
+        var id = setInterval(function(){ refresh(true); }, 120000);
+        return function(){ clearInterval(id); };
+      }, [refresh]);
 
-      const saveT = async (updated) => {
+      function saveT(updated) {
         setSaving(true);
-        try { await API.save(updated); setTasks(updated); }
-        catch (e) { alert("Erro ao salvar. Verifique sua conexão."); }
-        finally { setSaving(false); }
-      };
+        API.save(updated).then(function(){ setTasks(updated); setSaving(false); })
+          .catch(function(){ alert("Erro ao salvar. Verifique sua conexão."); setSaving(false); });
+      }
 
-      const submitReq = async () => {
-        if (!form.title.trim()||!form.requester.trim()) return;
+      function submitReq() {
+        if (!form.title.trim() || !form.requester.trim()) return;
         setSaving(true);
-        try {
-          const current = await API.load();
-          const opt = COMPLEXITY[form.complexity];
-          const t = { id:Date.now(), requester:form.requester, title:form.title,
-            category:form.category, complexity:opt.label, estimatedHours:opt.hours,
-            notes:form.notes, urgente:form.urgente, status:"pendente", order:0,
-            submittedAt:new Date().toISOString() };
-          let u;
+        API.load().then(function(current) {
+          var opt = COMPLEXITY[form.complexity];
+          var t = { id:Date.now(), requester:form.requester, title:form.title, category:form.category,
+            complexity:opt.label, estimatedHours:opt.hours, notes:form.notes, urgente:form.urgente,
+            status:"pendente", order:0, submittedAt:new Date().toISOString() };
+          var u;
           if (form.urgente) {
-            const ac=current.filter(x=>x.status==="em andamento");
-            const pe=current.filter(x=>x.status==="pendente");
-            const dn=current.filter(x=>x.status==="concluído");
-            u=[...ac,t,...pe,...dn];
-          } else { u=[...current,t]; }
-          u=u.map((x,i)=>({...x,order:i}));
-          await API.save(u); setTasks(u); setMyId(t.id);
-          setForm({requester:"",title:"",category:"Card/Post",complexity:0,notes:"",urgente:false});
-          setSent(true);
-        } catch { alert("Erro ao enviar. Tente de novo."); }
-        finally { setSaving(false); }
-      };
+            var ac = current.filter(function(x){return x.status==="em andamento";});
+            var pe = current.filter(function(x){return x.status==="pendente";});
+            var dn = current.filter(function(x){return x.status==="concluído";});
+            u = ac.concat([t]).concat(pe).concat(dn);
+          } else { u = current.concat([t]); }
+          u = u.map(function(x,i){ var c = {}; for(var k in x) c[k]=x[k]; c.order=i; return c; });
+          return API.save(u).then(function(){
+            setTasks(u); setMyId(t.id);
+            setForm({requester:"",title:"",category:"Card/Post",complexity:0,notes:"",urgente:false});
+            setSent(true); setSaving(false);
+          });
+        }).catch(function(){ alert("Erro ao enviar. Tente de novo."); setSaving(false); });
+      }
 
-      const setStatus = (id,st) => { const u=tasks.map(t=>t.id===id?{...t,status:st}:t); saveT(u); };
-      const del = (id) => { if (!confirm("Remover esta demanda?")) return; const u=tasks.filter(t=>t.id!==id).map((t,i)=>({...t,order:i})); saveT(u); };
-      const move = (id,dir) => {
-        const pe=[...tasks.filter(t=>t.status!=="concluído")].sort((a,b)=>a.order-b.order);
-        const dn=tasks.filter(t=>t.status==="concluído");
-        const idx=pe.findIndex(t=>t.id===id); if(idx===-1) return;
-        if(dir==="up"&&idx===0) return; if(dir==="down"&&idx===pe.length-1) return;
-        const sw=dir==="up"?idx-1:idx+1; [pe[idx],pe[sw]]=[pe[sw],pe[idx]];
-        saveT([...pe,...dn].map((t,i)=>({...t,order:i})));
-      };
-      const savePin = () => {
-        if(newPin.length<4) return;
-        localStorage.setItem("iris-pin",newPin);
-        setNewPin(""); setPinSaved(true); setTimeout(()=>setPinSaved(false),2500);
-      };
+      function setStatus(id, st) {
+        var u = tasks.map(function(t){ if(t.id!==id) return t; var c={}; for(var k in t) c[k]=t[k]; c.status=st; return c; });
+        saveT(u);
+      }
+      function del(id) {
+        if (!confirm("Remover esta demanda?")) return;
+        var u = tasks.filter(function(t){return t.id!==id;}).map(function(t,i){ var c={}; for(var k in t) c[k]=t[k]; c.order=i; return c; });
+        saveT(u);
+      }
+      function move(id, dir) {
+        var pe = tasks.filter(function(t){return t.status!=="concluído";}).sort(function(a,b){return a.order-b.order;});
+        var dn = tasks.filter(function(t){return t.status==="concluído";});
+        var idx = -1;
+        for (var i=0;i<pe.length;i++) if (pe[i].id===id) { idx=i; break; }
+        if (idx===-1) return;
+        if (dir==="up" && idx===0) return;
+        if (dir==="down" && idx===pe.length-1) return;
+        var sw = dir==="up" ? idx-1 : idx+1;
+        var tmp = pe[idx]; pe[idx]=pe[sw]; pe[sw]=tmp;
+        saveT(pe.concat(dn).map(function(t,i){ var c={}; for(var k in t) c[k]=t[k]; c.order=i; return c; }));
+      }
+      function savePin() {
+        if (newPin.length<4) return;
+        localStorage.setItem("iris-pin", newPin);
+        setNewPin(""); setPinSaved(true); setTimeout(function(){setPinSaved(false);},2500);
+      }
 
-      const eta = calcETA(tasks);
-      const pending = [...tasks.filter(t=>t.status!=="concluído")].sort((a,b)=>a.order-b.order);
-      const dones = tasks.filter(t=>t.status==="concluído");
-      const totalH = pending.reduce((s,t)=>s+t.estimatedHours,0);
-      const lastEnd = pending.length>0 ? eta[pending[pending.length-1]?.id]?.e : null;
-      const myReq = myId ? tasks.find(t=>t.id===myId) : null;
-      const myPos = myReq ? pending.findIndex(t=>t.id===myId)+1 : null;
-      const myEta = myReq ? eta[myId] : null;
+      var eta = calcETA(tasks);
+      var pending = tasks.filter(function(t){return t.status!=="concluído";}).sort(function(a,b){return a.order-b.order;});
+      var dones = tasks.filter(function(t){return t.status==="concluído";});
+      var totalH = pending.reduce(function(s,t){return s+t.estimatedHours;},0);
+      var lastEnd = pending.length>0 ? (eta[pending[pending.length-1].id]||{}).e : null;
+      var myReq = myId ? tasks.filter(function(t){return t.id===myId;})[0] : null;
+      var myPos = -1;
+      if (myReq) { for (var i=0;i<pending.length;i++) if (pending[i].id===myId) { myPos=i+1; break; } }
+      var myEta = myReq ? eta[myId] : null;
 
-      const SummaryBar = () => (
-        <div style={{background:W,borderRadius:10,padding:"12px 0",marginBottom:16,display:"flex",
-          boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}}>
-          {[{v:pending.length||"0",l:"na fila",c:G},{v:`${totalH}h`,l:"estimado",c:"#666"},
-            {v:lastEnd?fmt(lastEnd):"Livre",l:"livre em",c:AMB}].map((x,i)=>(
-            <div key={i} style={{flex:1,textAlign:"center",borderRight:i<2?"1px solid #E8EDE8":"none"}}>
-              <div style={{fontSize:i===2?11:18,fontWeight:700,color:x.c,lineHeight:1.2}}>{x.v}</div>
-              <div style={{fontSize:10,color:"#AAA",marginTop:1}}>{x.l}</div>
-            </div>
-          ))}
-        </div>
-      );
+      function SummaryBar() {
+        var items = [
+          {v:pending.length||"0", l:"na fila", c:G},
+          {v:totalH+"h", l:"estimado", c:"#666"},
+          {v:lastEnd?fmt(lastEnd):"Livre", l:"livre em", c:AMB}
+        ];
+        return e("div",{style:{background:W,borderRadius:10,padding:"12px 0",marginBottom:16,display:"flex",boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}},
+          items.map(function(x,i){
+            return e("div",{key:i, style:{flex:1,textAlign:"center",borderRight:i<2?"1px solid #E8EDE8":"none"}},
+              e("div",{style:{fontSize:i===2?11:18,fontWeight:700,color:x.c,lineHeight:1.2}}, x.v),
+              e("div",{style:{fontSize:10,color:"#AAA",marginTop:1}}, x.l)
+            );
+          })
+        );
+      }
 
-      if (!ready()) return <NotConfigured />;
-      if (mode==="login") return <Login onLogin={()=>setMode("admin")} onBack={()=>setMode("public")} />;
+      if (!ready()) return e(NotConfigured);
+      if (mode==="login") return e(Login, {onLogin:function(){setMode("admin");}, onBack:function(){setMode("public");}});
 
-      // ── ADMIN ──
-      if (mode==="admin") return (
-        <div style={{fontFamily:"inherit",background:BG,minHeight:"100vh",maxWidth:500,margin:"0 auto",display:"flex",flexDirection:"column"}}>
-          <Header isAdmin saving={saving} onLogout={()=>setMode("public")}
-            tabs={[["queue","📋","Fila"],["settings","⚙️","Config"]]}
-            activeTab={atab} setActiveTab={setAtab} />
+      if (mode==="admin") {
+        return e("div",{style:{fontFamily:"inherit",background:BG,minHeight:"100vh",maxWidth:500,margin:"0 auto",display:"flex",flexDirection:"column"}},
+          e(Header,{isAdmin:true, saving:saving, onLogout:function(){setMode("public");},
+            tabs:[["queue","📋","Fila"],["settings","⚙️","Config"]], activeTab:atab, setActiveTab:setAtab}),
+          atab==="queue" ? e("div",{style:{flex:1,overflowY:"auto",padding:16}},
+            e("button",{onClick:function(){refresh(false);}, style:B(G,{width:"100%",padding:10,fontSize:13,marginBottom:14,borderRadius:9,opacity:(saving||loading)?0.6:1})}, loading?"⏳ Carregando...":"🔄 Atualizar fila"),
+            loadErr ? e("div",{style:{background:"#FEF0EF",borderRadius:8,padding:12,marginBottom:14,fontSize:13,color:RED,textAlign:"center"}}, "⚠️ Erro ao carregar. Verifique a conexão.") : null,
+            (!loading && pending.length===0)
+              ? e("div",{style:{textAlign:"center",padding:"50px 20px",color:"#8AAA95"}},
+                  e("div",{style:{fontSize:44,marginBottom:12}}, "🌱"),
+                  e("div",{style:{fontSize:15,fontWeight:600,color:"#4A7A5A",marginBottom:7}}, "Fila vazia!"),
+                  e("div",{style:{fontSize:13}}, "Nenhuma demanda pendente.")
+                )
+              : e(React.Fragment, null,
+                  e(SummaryBar),
+                  pending.map(function(task,idx){ return e(TaskCard,{key:task.id, task:task, idx:idx, total:pending.length, eta:eta, onStatus:setStatus, onMove:move, onDel:del}); }),
+                  dones.length>0 ? e("div",{style:{marginTop:20}},
+                    e("div",{style:{fontSize:11,fontWeight:700,color:GRN,textTransform:"uppercase",letterSpacing:"0.9px",marginBottom:8,display:"flex",alignItems:"center",gap:6}},
+                      e("div",{style:{width:7,height:7,borderRadius:"50%",background:GRN}}), "Concluídas · " + dones.length
+                    ),
+                    dones.map(function(task){
+                      return e("div",{key:task.id, style:{background:W,borderRadius:10,padding:"10px 14px",marginBottom:7,opacity:0.4,borderLeft:"4px solid "+GRN,display:"flex",alignItems:"center",justifyContent:"space-between"}},
+                        e("div",null,
+                          e("div",{style:{fontSize:13,fontWeight:500,color:"#3A5A45",textDecoration:"line-through"}}, task.title),
+                          e("div",{style:{fontSize:11,color:"#8AAA95"}}, "por " + task.requester)
+                        ),
+                        e("button",{onClick:function(){del(task.id);}, style:{background:"none",border:"none",color:"#C0D8C8",fontSize:18,cursor:"pointer"}}, "×")
+                      );
+                    })
+                  ) : null
+                )
+          ) : e("div",{style:{flex:1,overflowY:"auto",padding:16}},
+            e("div",{style:{background:W,borderRadius:12,padding:16,marginBottom:12,boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}},
+              e("div",{style:{fontSize:14,fontWeight:600,color:"#1A2E22",marginBottom:4}}, "🔑 Alterar PIN"),
+              e("div",{style:{fontSize:12,color:"#8AAA95",marginBottom:14}}, "Salvo neste navegador. PIN padrão: ", e("strong",null,"1234")),
+              e("input",{type:"password", value:newPin, onChange:function(ev){setNewPin(ev.target.value);}, placeholder:"Novo PIN (mín. 4 dígitos)", maxLength:8, style:I({marginBottom:10})}),
+              e("button",{onClick:savePin, disabled:newPin.length<4, style:B(newPin.length>=4?G:"#A8C4B0",{width:"100%",padding:12,fontSize:14,cursor:newPin.length>=4?"pointer":"default"})}, "Salvar PIN"),
+              pinSaved ? e("div",{style:{textAlign:"center",color:GRN,fontSize:13,marginTop:8}}, "✓ PIN alterado!") : null
+            ),
+            e("div",{style:{background:SAGE,borderRadius:12,padding:14}},
+              e("div",{style:{fontSize:13,fontWeight:600,color:G,marginBottom:6}}, "ℹ️ Acesso"),
+              e("div",{style:{fontSize:12,color:"#3A5A45",lineHeight:1.7}}, "Qualquer pessoa com o link acessa o formulário e vê a fila. Apenas você, com o PIN, gerencia a ordem e os status.")
+            )
+          )
+        );
+      }
 
-          {atab==="queue" && (
-            <div style={{flex:1,overflowY:"auto",padding:16}}>
-              <button onClick={()=>refresh()} style={{...B(G,{width:"100%",padding:10,fontSize:13,
-                marginBottom:14,borderRadius:9,opacity:saving||loading?0.6:1})}}>
-                {loading?"⏳ Carregando...":"🔄 Atualizar fila"}
-              </button>
-              {loadErr && <div style={{background:"#FEF0EF",borderRadius:8,padding:12,marginBottom:14,
-                fontSize:13,color:RED,textAlign:"center"}}>
-                ⚠️ Erro ao carregar. Verifique a conexão.
-              </div>}
-              {!loading && pending.length===0 ? (
-                <div style={{textAlign:"center",padding:"50px 20px",color:"#8AAA95"}}>
-                  <div style={{fontSize:44,marginBottom:12}}>🌱</div>
-                  <div style={{fontSize:15,fontWeight:600,color:"#4A7A5A",marginBottom:7}}>Fila vazia!</div>
-                  <div style={{fontSize:13}}>Nenhuma demanda pendente.</div>
-                </div>
-              ) : <>
-                <SummaryBar />
-                {pending.map((task,idx)=>(
-                  <TaskCard key={task.id} task={task} idx={idx} total={pending.length}
-                    eta={eta} onStatus={setStatus} onMove={move} onDel={del} />
-                ))}
-                {dones.length>0 && (
-                  <div style={{marginTop:20}}>
-                    <div style={{fontSize:11,fontWeight:700,color:GRN,textTransform:"uppercase",
-                      letterSpacing:"0.9px",marginBottom:8,display:"flex",alignItems:"center",gap:6}}>
-                      <div style={{width:7,height:7,borderRadius:"50%",background:GRN}}/>
-                      Concluídas · {dones.length}
-                    </div>
-                    {dones.map(task=>(
-                      <div key={task.id} style={{background:W,borderRadius:10,padding:"10px 14px",
-                        marginBottom:7,opacity:0.4,borderLeft:`4px solid ${GRN}`,
-                        display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                        <div>
-                          <div style={{fontSize:13,fontWeight:500,color:"#3A5A45",textDecoration:"line-through"}}>{task.title}</div>
-                          <div style={{fontSize:11,color:"#8AAA95"}}>por {task.requester}</div>
-                        </div>
-                        <button onClick={()=>del(task.id)} style={{background:"none",border:"none",
-                          color:"#C0D8C8",fontSize:18,cursor:"pointer"}}>×</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>}
-            </div>
-          )}
-
-          {atab==="settings" && (
-            <div style={{flex:1,overflowY:"auto",padding:16}}>
-              <div style={{background:W,borderRadius:12,padding:16,marginBottom:12,
-                boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}}>
-                <div style={{fontSize:14,fontWeight:600,color:"#1A2E22",marginBottom:4}}>🔑 Alterar PIN</div>
-                <div style={{fontSize:12,color:"#8AAA95",marginBottom:14}}>
-                  Salvo neste navegador. PIN padrão: <strong>1234</strong>
-                </div>
-                <input type="password" value={newPin} onChange={e=>setNewPin(e.target.value)}
-                  placeholder="Novo PIN (mín. 4 dígitos)" maxLength={8} style={I({marginBottom:10})} />
-                <button onClick={savePin} disabled={newPin.length<4}
-                  style={{...B(newPin.length>=4?G:"#A8C4B0",{width:"100%",padding:12,fontSize:14,
-                    cursor:newPin.length>=4?"pointer":"default"})}}>Salvar PIN</button>
-                {pinSaved && <div style={{textAlign:"center",color:GRN,fontSize:13,marginTop:8}}>✓ PIN alterado!</div>}
-              </div>
-              <div style={{background:SAGE,borderRadius:12,padding:14}}>
-                <div style={{fontSize:13,fontWeight:600,color:G,marginBottom:6}}>ℹ️ Acesso</div>
-                <div style={{fontSize:12,color:"#3A5A45",lineHeight:1.7}}>
-                  Qualquer pessoa com o link acessa o formulário e vê a fila. Apenas você, com o PIN, gerencia a ordem e os status. PIN fica salvo no navegador — se trocar de dispositivo, precisará configurar novamente.
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-
-      // ── PUBLIC ──
-      return (
-        <div style={{fontFamily:"inherit",background:BG,minHeight:"100vh",maxWidth:500,margin:"0 auto",display:"flex",flexDirection:"column"}}>
-          <Header isAdmin={false} saving={saving} onLogin={()=>setMode("login")}
-            tabs={[["request","📥","Solicitar"],["status","📋","Ver fila"]]}
-            activeTab={tab} setActiveTab={setTab} />
-
-          {tab==="request" && (
-            <div style={{flex:1,overflowY:"auto",padding:16}}>
-              {sent ? (
-                <div style={{textAlign:"center",padding:"40px 20px"}}>
-                  <div style={{fontSize:50,marginBottom:14}}>✅</div>
-                  <div style={{fontSize:16,fontWeight:700,color:G,marginBottom:10}}>Solicitação enviada!</div>
-                  {myPos&&myEta&&(
-                    <div style={{background:SAGE,borderRadius:12,padding:"14px 16px",marginBottom:16,textAlign:"left"}}>
-                      <div style={{fontSize:13,color:G,fontWeight:700,marginBottom:10}}>📍 Sua peça na fila</div>
-                      {[["Posição",`${myPos}º na fila`],["Início previsto",fmt(myEta.s)],["Conclusão estimada",fmt(myEta.e)]].map(([l,v])=>(
-                        <div key={l} style={{fontSize:13,color:"#2A4A35",marginBottom:5,display:"flex",justifyContent:"space-between"}}>
-                          <span>{l}</span><strong>{v}</strong>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <button onClick={()=>{setSent(false);setMyId(null);}}
-                    style={{...B(G,{padding:"10px 24px",fontSize:13,borderRadius:8})}}>
-                    Nova solicitação
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <p style={{fontSize:13,color:"#6A8A75",textAlign:"center",margin:"0 0 16px"}}>
-                    Solicite peças gráficas ao setor de comunicação
-                  </p>
-                  {[["Seu nome *","requester","Quem está solicitando?"],
-                    ["O que precisa? *","title","Ex: Card para o Dia da Árvore"]].map(([lb,k,ph])=>(
-                    <div key={k} style={{marginBottom:12}}>
-                      <label style={{fontSize:12,fontWeight:600,color:"#3A5A45",display:"block",marginBottom:5}}>{lb}</label>
-                      <input value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})} placeholder={ph} style={I()} />
-                    </div>
-                  ))}
-                  <div style={{marginBottom:12}}>
-                    <label style={{fontSize:12,fontWeight:600,color:"#3A5A45",display:"block",marginBottom:5}}>Categoria</label>
-                    <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})} style={I()}>
-                      {CATS.map(c=><option key={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div style={{marginBottom:12}}>
-                    <label style={{fontSize:12,fontWeight:600,color:"#3A5A45",display:"block",marginBottom:6}}>
-                      Tipo de peça <span style={{color:"#8AAA95",fontWeight:400}}>— qual a complexidade?</span>
-                    </label>
-                    {COMPLEXITY.map((opt,i)=>(
-                      <div key={i} onClick={()=>setForm({...form,complexity:i})} style={{
-                        padding:"10px 12px",marginBottom:6,borderRadius:8,cursor:"pointer",
-                        border:`1.5px solid ${form.complexity===i?G:"#C0D8C8"}`,
-                        background:form.complexity===i?"#EBF5EE":W,
-                        display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                        <span style={{fontSize:13,color:"#1A2E22"}}>{opt.emoji} {opt.label}</span>
-                        <span style={{fontSize:12,fontWeight:600,color:form.complexity===i?G:"#8AAA95"}}>~{opt.hours}h</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{marginBottom:12}}>
-                    <label style={{fontSize:12,fontWeight:600,color:"#3A5A45",display:"block",marginBottom:5}}>Observações / referências</label>
-                    <textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})}
-                      placeholder="Texto, cores, referência visual, prazo..." rows={3}
-                      style={I({resize:"none",lineHeight:1.5})} />
-                  </div>
-                  <div onClick={()=>setForm({...form,urgente:!form.urgente})} style={{
-                    marginBottom:16,padding:"12px 14px",borderRadius:8,cursor:"pointer",
-                    border:`1.5px solid ${form.urgente?RED:"#C0D8C8"}`,
-                    background:form.urgente?"#FEF0EF":W,display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{width:20,height:20,borderRadius:4,border:`2px solid ${form.urgente?RED:"#A8C4B0"}`,
-                      background:form.urgente?RED:"transparent",display:"flex",alignItems:"center",
-                      justifyContent:"center",fontSize:11,color:W,flexShrink:0}}>
-                      {form.urgente?"✓":""}
-                    </div>
-                    <div>
-                      <div style={{fontSize:13,fontWeight:600,color:form.urgente?RED:"#1A2E22"}}>⚡ Urgente</div>
-                      <div style={{fontSize:11,color:"#8AAA95"}}>Apenas quando realmente necessário</div>
-                    </div>
-                  </div>
-                  {pending.length>0&&(
-                    <div style={{background:SAGE,borderRadius:8,padding:"10px 12px",marginBottom:14,fontSize:12,color:"#3A5A45"}}>
-                      📋 <strong>{pending.length} peça{pending.length>1?"s":""}</strong> na fila ({totalH}h).
-                      {!form.urgente&&lastEnd&&` Sua peça fica pronta aprox. ${fmt(addH(new Date(lastEnd),COMPLEXITY[form.complexity].hours))}.`}
-                      {form.urgente&&" Urgente entra na frente da fila."}
-                    </div>
-                  )}
-                  <button onClick={submitReq} disabled={!form.title.trim()||!form.requester.trim()||saving}
-                    style={{...B(form.title.trim()&&form.requester.trim()&&!saving?G:"#A8C4B0",
-                    {width:"100%",padding:14,fontSize:15,borderRadius:10,
-                    cursor:form.title.trim()&&form.requester.trim()&&!saving?"pointer":"default"})}}>
-                    {saving?"Enviando...":"Enviar solicitação →"}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-
-          {tab==="status" && (
-            <div style={{flex:1,overflowY:"auto",padding:16}}>
-              <SummaryBar />
-              <button onClick={()=>refresh()} style={{...B(G,{width:"100%",padding:9,fontSize:12,
-                marginBottom:14,borderRadius:8,opacity:loading?0.6:1})}}>
-                🔄 Atualizar
-              </button>
-              {loading ? (
-                <div style={{textAlign:"center",padding:40,color:"#8AAA95"}}>Carregando...</div>
-              ) : pending.length===0 ? (
-                <div style={{textAlign:"center",padding:"40px 20px",color:"#8AAA95"}}>
-                  <div style={{fontSize:40,marginBottom:12}}>🌱</div>
-                  <div style={{fontSize:14,fontWeight:600,color:"#4A7A5A",marginBottom:6}}>Fila vazia!</div>
-                  <div style={{fontSize:13}}>Nenhuma demanda pendente.</div>
-                </div>
-              ) : pending.map((task,idx)=>{
-                const e=eta[task.id];
-                return (
-                  <div key={task.id} style={{background:W,borderRadius:10,padding:"12px 14px",marginBottom:8,
-                    borderLeft:`4px solid ${task.status==="em andamento"?AMB:task.urgente?RED:"#C0D8C8"}`,
-                    boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
-                    <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:6}}>
-                      <div style={{width:24,height:24,borderRadius:"50%",background:task.status==="em andamento"?AMB:SAGE,
-                        color:task.status==="em andamento"?W:G,display:"flex",alignItems:"center",
-                        justifyContent:"center",fontSize:11,fontWeight:700,flexShrink:0}}>
-                        {task.status==="em andamento"?"▶":idx+1}
-                      </div>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:13,fontWeight:600,color:"#1A2E22"}}>
-                          {task.urgente&&<span style={{color:RED,fontSize:11}}>⚡ </span>}{task.title}
-                        </div>
-                        <div style={{fontSize:11,color:"#8AAA95",marginTop:2}}>
-                          por {task.requester} · {task.category} · ~{task.estimatedHours}h
-                        </div>
-                      </div>
-                      <div style={{fontSize:10,fontWeight:600,padding:"3px 8px",borderRadius:20,flexShrink:0,
-                        background:task.status==="em andamento"?"#FFF5E0":SAGE,
-                        color:task.status==="em andamento"?AMB:G}}>
-                        {task.status==="em andamento"?"em andamento":"na fila"}
-                      </div>
-                    </div>
-                    {e&&<div style={{background:"#F3F9F4",borderRadius:7,padding:"7px 10px",fontSize:11,
-                      color:"#4A6A55",display:"flex",justifyContent:"space-between"}}>
-                      <span>Início: <strong>{fmt(e.s)}</strong></span>
-                      <span>Conclusão: <strong>{fmt(e.e)}</strong></span>
-                    </div>}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+      return e("div",{style:{fontFamily:"inherit",background:BG,minHeight:"100vh",maxWidth:500,margin:"0 auto",display:"flex",flexDirection:"column"}},
+        e(Header,{isAdmin:false, saving:saving, onLogin:function(){setMode("login");},
+          tabs:[["request","📥","Solicitar"],["status","📋","Ver fila"]], activeTab:tab, setActiveTab:setTab}),
+        tab==="request" ? e("div",{style:{flex:1,overflowY:"auto",padding:16}},
+          sent
+            ? e("div",{style:{textAlign:"center",padding:"40px 20px"}},
+                e("div",{style:{fontSize:50,marginBottom:14}}, "✅"),
+                e("div",{style:{fontSize:16,fontWeight:700,color:G,marginBottom:10}}, "Solicitação enviada!"),
+                (myPos>0 && myEta) ? e("div",{style:{background:SAGE,borderRadius:12,padding:"14px 16px",marginBottom:16,textAlign:"left"}},
+                  e("div",{style:{fontSize:13,color:G,fontWeight:700,marginBottom:10}}, "📍 Sua peça na fila"),
+                  e("div",{style:{fontSize:13,color:"#2A4A35",marginBottom:5,display:"flex",justifyContent:"space-between"}}, e("span",null,"Posição"), e("strong",null,myPos+"º na fila")),
+                  e("div",{style:{fontSize:13,color:"#2A4A35",marginBottom:5,display:"flex",justifyContent:"space-between"}}, e("span",null,"Início previsto"), e("strong",null,fmt(myEta.s))),
+                  e("div",{style:{fontSize:13,color:"#2A4A35",display:"flex",justifyContent:"space-between"}}, e("span",null,"Conclusão estimada"), e("strong",null,fmt(myEta.e)))
+                ) : null,
+                e("button",{onClick:function(){setSent(false);setMyId(null);}, style:B(G,{padding:"10px 24px",fontSize:13,borderRadius:8})}, "Nova solicitação")
+              )
+            : e(React.Fragment, null,
+                e("p",{style:{fontSize:13,color:"#6A8A75",textAlign:"center",margin:"0 0 16px"}}, "Solicite peças gráficas ao setor de comunicação"),
+                e("div",{style:{marginBottom:12}},
+                  e("label",{style:{fontSize:12,fontWeight:600,color:"#3A5A45",display:"block",marginBottom:5}}, "Seu nome *"),
+                  e("input",{value:form.requester, onChange:function(ev){var c={};for(var k in form)c[k]=form[k];c.requester=ev.target.value;setForm(c);}, placeholder:"Quem está solicitando?", style:I()})
+                ),
+                e("div",{style:{marginBottom:12}},
+                  e("label",{style:{fontSize:12,fontWeight:600,color:"#3A5A45",display:"block",marginBottom:5}}, "O que precisa? *"),
+                  e("input",{value:form.title, onChange:function(ev){var c={};for(var k in form)c[k]=form[k];c.title=ev.target.value;setForm(c);}, placeholder:"Ex: Card para o Dia da Árvore", style:I()})
+                ),
+                e("div",{style:{marginBottom:12}},
+                  e("label",{style:{fontSize:12,fontWeight:600,color:"#3A5A45",display:"block",marginBottom:5}}, "Categoria"),
+                  e("select",{value:form.category, onChange:function(ev){var c={};for(var k in form)c[k]=form[k];c.category=ev.target.value;setForm(c);}, style:I()},
+                    CATS.map(function(cat){ return e("option",{key:cat}, cat); })
+                  )
+                ),
+                e("div",{style:{marginBottom:12}},
+                  e("label",{style:{fontSize:12,fontWeight:600,color:"#3A5A45",display:"block",marginBottom:6}}, "Tipo de peça ", e("span",{style:{color:"#8AAA95",fontWeight:400}}, "— qual a complexidade?")),
+                  COMPLEXITY.map(function(opt,i){
+                    return e("div",{key:i, onClick:function(){var c={};for(var k in form)c[k]=form[k];c.complexity=i;setForm(c);},
+                      style:{padding:"10px 12px",marginBottom:6,borderRadius:8,cursor:"pointer",
+                      border:"1.5px solid "+(form.complexity===i?G:"#C0D8C8"),background:form.complexity===i?"#EBF5EE":W,
+                      display:"flex",alignItems:"center",justifyContent:"space-between"}},
+                      e("span",{style:{fontSize:13,color:"#1A2E22"}}, opt.emoji+" "+opt.label),
+                      e("span",{style:{fontSize:12,fontWeight:600,color:form.complexity===i?G:"#8AAA95"}}, "~"+opt.hours+"h")
+                    );
+                  })
+                ),
+                e("div",{style:{marginBottom:12}},
+                  e("label",{style:{fontSize:12,fontWeight:600,color:"#3A5A45",display:"block",marginBottom:5}}, "Observações / referências"),
+                  e("textarea",{value:form.notes, onChange:function(ev){var c={};for(var k in form)c[k]=form[k];c.notes=ev.target.value;setForm(c);}, placeholder:"Texto, cores, referência visual, prazo...", rows:3, style:I({resize:"none",lineHeight:1.5})})
+                ),
+                e("div",{onClick:function(){var c={};for(var k in form)c[k]=form[k];c.urgente=!form.urgente;setForm(c);},
+                  style:{marginBottom:16,padding:"12px 14px",borderRadius:8,cursor:"pointer",
+                  border:"1.5px solid "+(form.urgente?RED:"#C0D8C8"),background:form.urgente?"#FEF0EF":W,display:"flex",alignItems:"center",gap:10}},
+                  e("div",{style:{width:20,height:20,borderRadius:4,border:"2px solid "+(form.urgente?RED:"#A8C4B0"),
+                    background:form.urgente?RED:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:W,flexShrink:0}}, form.urgente?"✓":""),
+                  e("div",null,
+                    e("div",{style:{fontSize:13,fontWeight:600,color:form.urgente?RED:"#1A2E22"}}, "⚡ Urgente"),
+                    e("div",{style:{fontSize:11,color:"#8AAA95"}}, "Apenas quando realmente necessário")
+                  )
+                ),
+                pending.length>0 ? e("div",{style:{background:SAGE,borderRadius:8,padding:"10px 12px",marginBottom:14,fontSize:12,color:"#3A5A45"}},
+                  "📋 ", e("strong",null, pending.length+" peça"+(pending.length>1?"s":"")), " na fila ("+totalH+"h).",
+                  (!form.urgente && lastEnd) ? (" Sua peça fica pronta aprox. "+fmt(addH(new Date(lastEnd), COMPLEXITY[form.complexity].hours))+".") : "",
+                  form.urgente ? " Urgente entra na frente da fila." : ""
+                ) : null,
+                e("button",{onClick:submitReq, disabled: !form.title.trim()||!form.requester.trim()||saving,
+                  style:B((form.title.trim()&&form.requester.trim()&&!saving)?G:"#A8C4B0", {width:"100%",padding:14,fontSize:15,borderRadius:10,cursor:(form.title.trim()&&form.requester.trim()&&!saving)?"pointer":"default"})},
+                  saving?"Enviando...":"Enviar solicitação →"
+                )
+              )
+        ) : e("div",{style:{flex:1,overflowY:"auto",padding:16}},
+          e(SummaryBar),
+          e("button",{onClick:function(){refresh(false);}, style:B(G,{width:"100%",padding:9,fontSize:12,marginBottom:14,borderRadius:8,opacity:loading?0.6:1})}, "🔄 Atualizar"),
+          loading
+            ? e("div",{style:{textAlign:"center",padding:40,color:"#8AAA95"}}, "Carregando...")
+            : pending.length===0
+              ? e("div",{style:{textAlign:"center",padding:"40px 20px",color:"#8AAA95"}},
+                  e("div",{style:{fontSize:40,marginBottom:12}}, "🌱"),
+                  e("div",{style:{fontSize:14,fontWeight:600,color:"#4A7A5A",marginBottom:6}}, "Fila vazia!"),
+                  e("div",{style:{fontSize:13}}, "Nenhuma demanda pendente.")
+                )
+              : pending.map(function(task,idx){
+                  var evv = eta[task.id];
+                  return e("div",{key:task.id, style:{background:W,borderRadius:10,padding:"12px 14px",marginBottom:8,
+                    borderLeft:"4px solid "+(task.status==="em andamento"?AMB:(task.urgente?RED:"#C0D8C8")),boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}},
+                    e("div",{style:{display:"flex",alignItems:"flex-start",gap:10,marginBottom:6}},
+                      e("div",{style:{width:24,height:24,borderRadius:"50%",background:task.status==="em andamento"?AMB:SAGE,
+                        color:task.status==="em andamento"?W:G,display:"flex",alignItems:"center",justifyContent:"center",
+                        fontSize:11,fontWeight:700,flexShrink:0}}, task.status==="em andamento"?"▶":String(idx+1)),
+                      e("div",{style:{flex:1}},
+                        e("div",{style:{fontSize:13,fontWeight:600,color:"#1A2E22"}}, task.urgente?e("span",{style:{color:RED,fontSize:11}},"⚡ "):null, task.title),
+                        e("div",{style:{fontSize:11,color:"#8AAA95",marginTop:2}}, "por "+task.requester+" · "+task.category+" · ~"+task.estimatedHours+"h")
+                      ),
+                      e("div",{style:{fontSize:10,fontWeight:600,padding:"3px 8px",borderRadius:20,flexShrink:0,
+                        background:task.status==="em andamento"?"#FFF5E0":SAGE,color:task.status==="em andamento"?AMB:G}}, task.status==="em andamento"?"em andamento":"na fila")
+                    ),
+                    evv ? e("div",{style:{background:"#F3F9F4",borderRadius:7,padding:"7px 10px",fontSize:11,color:"#4A6A55",display:"flex",justifyContent:"space-between"}},
+                      e("span",null, "Início: ", e("strong",null,fmt(evv.s))),
+                      e("span",null, "Conclusão: ", e("strong",null,fmt(evv.e)))
+                    ) : null
+                  );
+                })
+        )
       );
     }
 
-    ReactDOM.createRoot(document.getElementById("root")).render(<Iris />);
+    try {
+      ReactDOM.createRoot(document.getElementById("root")).render(e(Iris));
+    } catch (err) {
+      document.getElementById("root").innerHTML =
+        "<div style='padding:24px;font-family:sans-serif;color:#C94B4B'><b>Erro ao carregar o app:</b><br>" +
+        (err && err.message ? err.message : String(err)) + "</div>";
+    }
   </script>
 </body>
 </html>
